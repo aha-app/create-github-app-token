@@ -15,7 +15,12 @@ function normalizeStderr(stderr) {
   return stderr
     .replaceAll(/\u001B\[[0-9;]*m/g, "")
     .replaceAll(process.cwd(), "<cwd>")
-    .replaceAll(/:\d+:\d+/g, ":<line>:<column>");
+    .replaceAll(/:\d+:\d+/g, ":<line>:<column>")
+    // Node 24 patch releases differ in how this internal loader frame is named.
+    .replaceAll(
+      "onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:<line>:<column>)",
+      "node:internal/modules/esm/loader:<line>:<column>"
+    );
 }
 
 // Get all files in tests directory

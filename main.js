@@ -4,6 +4,7 @@ import * as core from "@actions/core";
 import { createAppAuth } from "@octokit/auth-app";
 
 import { getPermissionsFromInputs } from "./lib/get-permissions-from-inputs.js";
+import { createKmsJwt } from "./lib/create-kms-jwt.js";
 import { main } from "./lib/main.js";
 import request, { ensureNativeProxySupport } from "./lib/request.js";
 
@@ -23,8 +24,12 @@ async function run() {
     throw new Error("The 'client-id' (or deprecated 'app-id') input must be set to a non-empty string. If using a secret or variable, ensure it is available in this workflow context.");
   }
   const privateKey = core.getInput("private-key");
-  if (!privateKey) {
-    throw new Error("The 'private-key' input must be set to a non-empty string. If using a secret or variable, ensure it is available in this workflow context.");
+  const kmsKeyId = core.getInput("kms-key-id");
+  if (!privateKey && !kmsKeyId) {
+    throw new Error("Either 'private-key' or 'kms-key-id' must be set to a non-empty string. If using a secret or variable, ensure it is available in this workflow context.");
+  }
+  if (privateKey && kmsKeyId) {
+    throw new Error("The 'private-key' and 'kms-key-id' inputs are mutually exclusive.");
   }
   const enterprise = core.getInput("enterprise");
   const owner = core.getInput("owner");
@@ -40,7 +45,7 @@ async function run() {
 
   return main(
     clientId,
-    privateKey,
+    kmsKeyId ? { createJwt: createKmsJwt(kmsKeyId, core) } : { privateKey },
     enterprise,
     owner,
     repositories,
