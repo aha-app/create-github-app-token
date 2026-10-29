@@ -357,7 +357,7 @@ If you set `HTTP_PROXY` or `HTTPS_PROXY`, also set `NODE_USE_ENV_PROXY: "1"` on 
 
 ### `private-key`
 
-**Required:** GitHub App private key. Escaped newlines (`\\n`) will be automatically replaced with actual newlines.
+**Required unless `kms-key-id` is set:** GitHub App private key. Escaped newlines (`\\n`) will be automatically replaced with actual newlines. Cannot be combined with `kms-key-id`.
 
 Some other actions may require the private key to be Base64 encoded. To avoid recreating a new secret, it can be decoded on the fly, but it needs to be managed securely. Here is an example of how this can be achieved:
 
@@ -376,6 +376,31 @@ steps:
       client-id: ${{ vars.APP_CLIENT_ID }}
       private-key: ${{ steps.decode.outputs.private-key }}
 ```
+
+### `kms-key-id`
+
+**Required unless `private-key` is set:** AWS KMS key ID, ARN, or alias containing the GitHub App's imported RSA private key. Cannot be combined with `private-key`.
+
+The key must have `SIGN_VERIFY` usage and support `RSASSA_PKCS1_V1_5_SHA_256` (GitHub's RS256 algorithm). Import the GitHub-generated private key before running the action; the action only calls `kms:Sign` and never retrieves private key material. See [AWS's key import documentation](https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html).
+
+Configure the AWS SDK's region and credentials before this step, preferably using a dedicated GitHub OIDC role. Grant that role only `kms:Sign` on the specific key ARN, with a `kms:SigningAlgorithm` condition of `RSASSA_PKCS1_V1_5_SHA_256`. Restrict the role's OIDC trust to the intended repository and trusted execution ref or protected environment. The key ARN and region can be stored as repository variables.
+
+```yaml
+- name: Generate GitHub App token using KMS
+  id: app-token
+  uses: aha-app/create-github-app-token@<reviewed-commit-sha>
+  env:
+    AWS_REGION: us-east-1
+  with:
+    client-id: ${{ vars.APP_CLIENT_ID }}
+    kms-key-id: ${{ vars.APP_KMS_KEY_ARN }}
+    owner: ${{ github.repository_owner }}
+    repositories: ${{ github.event.repository.name }}
+    permission-contents: write
+    permission-pull-requests: write
+```
+
+Repository and permission scoping, token outputs, and end-of-job revocation behave the same as with `private-key`. KMS protects against private-key extraction, but anyone with signing access can authenticate as the App and request tokens within its installation permissions. Keep signing credentials away from untrusted code; the action's token permission inputs do not restrict what a caller with direct KMS access can request.
 
 ### `owner`
 

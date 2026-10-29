@@ -13,8 +13,11 @@ inputs:
     required: false
     deprecationMessage: "Use 'client-id' instead."
   private-key:
-    description: "GitHub App private key"
-    required: true
+    description: "GitHub App private key (mutually exclusive with kms-key-id)"
+    required: false
+  kms-key-id:
+    description: "AWS KMS key ID, ARN, or alias containing the GitHub App RSA private key (mutually exclusive with private-key)"
+    required: false
   owner:
     description: "The owner of the GitHub App installation (defaults to current repository owner)"
     required: false

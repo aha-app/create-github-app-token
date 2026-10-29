@@ -36,6 +36,14 @@ POST /app/installations/123456/access_tokens
 {"repositories":["create-github-app-token"]}
 `;
 
+exports[`main-conflicting-signing-inputs.test.js > stderr 1`] = `
+The 'private-key' and 'kms-key-id' inputs are mutually exclusive.
+`;
+
+exports[`main-conflicting-signing-inputs.test.js > stdout 1`] = `
+::error::The 'private-key' and 'kms-key-id' inputs are mutually exclusive.
+`;
+
 exports[`main-custom-github-api-url.test.js > stdout 1`] = `
 Inputs 'owner' and 'repositories' are set. Creating token for the following repositories:
 - actions/create-github-app-token
@@ -97,7 +105,7 @@ Error: Cannot use 'enterprise' input with 'owner' or 'repositories' inputs
     at run (file://<cwd>/main.js:<line>:<column>)
     at file://<cwd>/main.js:<line>:<column>
     at ModuleJob.run (node:internal/modules/esm/module_job:<line>:<column>)
-    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:<line>:<column>)
+    at async node:internal/modules/esm/loader:<line>:<column>
     at async file://<cwd>/tests/main-enterprise-mutual-exclusivity-owner.test.js:<line>:<column>
 `;
 
@@ -111,7 +119,7 @@ Error: Cannot use 'enterprise' input with 'owner' or 'repositories' inputs
     at run (file://<cwd>/main.js:<line>:<column>)
     at file://<cwd>/main.js:<line>:<column>
     at ModuleJob.run (node:internal/modules/esm/module_job:<line>:<column>)
-    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:<line>:<column>)
+    at async node:internal/modules/esm/loader:<line>:<column>
     at async file://<cwd>/tests/main-enterprise-mutual-exclusivity-repositories.test.js:<line>:<column>
 `;
 
@@ -153,6 +161,37 @@ POST /app/installations/123456/access_tokens
 {"permissions":{"enterprise_custom_properties_for_organizations":"read"}}
 `;
 
+exports[`main-kms-sign-failure.test.js > stderr 1`] = `
+KMS access denied
+`;
+
+exports[`main-kms-sign-failure.test.js > stdout 1`] = `
+Inputs 'owner' and 'repositories' are not set. Creating token for this repository (actions/create-github-app-token).
+Failed to create token for "actions/create-github-app-token" (attempt 1): KMS access denied
+::error::KMS access denied
+--- REQUESTS ---
+
+`;
+
+exports[`main-kms-token.test.js > stdout 1`] = `
+Inputs 'owner' and 'repositories' are not set. Creating token for this repository (actions/create-github-app-token).
+::add-mask::eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2OTk5OTk5NzAsImV4cCI6MTcwMDAwMDU3MCwiaXNzIjoiSXYxLjAxMjM0NTY3ODlhYmNkZWYifQ.dGVzdC1zaWduYXR1cmU
+::add-mask::eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2OTk5OTk5NzAsImV4cCI6MTcwMDAwMDU3MCwiaXNzIjoiSXYxLjAxMjM0NTY3ODlhYmNkZWYifQ.dGVzdC1zaWduYXR1cmU
+::add-mask::ghs_16C7e42F292c6912E7710c838347Ae178B4a
+
+::set-output name=token::ghs_16C7e42F292c6912E7710c838347Ae178B4a
+
+::set-output name=installation-id::123456
+
+::set-output name=app-slug::github-actions
+::save-state name=token::ghs_16C7e42F292c6912E7710c838347Ae178B4a
+::save-state name=expiresAt::2016-07-11T22:14:10Z
+--- REQUESTS ---
+GET /repos/actions/create-github-app-token/installation
+POST /app/installations/123456/access_tokens
+{"repositories":["create-github-app-token"],"permissions":{"contents":"write","pull_requests":"write"}}
+`;
+
 exports[`main-missing-client-and-app-id.test.js > stderr 1`] = `
 The 'client-id' (or deprecated 'app-id') input must be set to a non-empty string. If using a secret or variable, ensure it is available in this workflow context.
 `;
@@ -166,11 +205,11 @@ GITHUB_REPOSITORY_OWNER missing, must be set to '<owner>'
 `;
 
 exports[`main-missing-private-key.test.js > stderr 1`] = `
-The 'private-key' input must be set to a non-empty string. If using a secret or variable, ensure it is available in this workflow context.
+Either 'private-key' or 'kms-key-id' must be set to a non-empty string. If using a secret or variable, ensure it is available in this workflow context.
 `;
 
 exports[`main-missing-private-key.test.js > stdout 1`] = `
-::error::The 'private-key' input must be set to a non-empty string. If using a secret or variable, ensure it is available in this workflow context.
+::error::Either 'private-key' or 'kms-key-id' must be set to a non-empty string. If using a secret or variable, ensure it is available in this workflow context.
 `;
 
 exports[`main-missing-repository.test.js > stderr 1`] = `
@@ -332,7 +371,7 @@ Error: Invalid repository 'octocat/hello-world/extra'. Expected 'repository' or 
     at run (file://<cwd>/main.js:<line>:<column>)
     at file://<cwd>/main.js:<line>:<column>
     at ModuleJob.run (node:internal/modules/esm/module_job:<line>:<column>)
-    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:<line>:<column>)
+    at async node:internal/modules/esm/loader:<line>:<column>
     at async file://<cwd>/tests/main-token-get-owner-set-repo-invalid-format.test.js:<line>:<column>
 `;
 
@@ -387,7 +426,7 @@ Error: Repository 'octocat/hello-world' includes owner 'octocat', which does not
     at run (file://<cwd>/main.js:<line>:<column>)
     at file://<cwd>/main.js:<line>:<column>
     at ModuleJob.run (node:internal/modules/esm/module_job:<line>:<column>)
-    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:<line>:<column>)
+    at async node:internal/modules/esm/loader:<line>:<column>
     at async file://<cwd>/tests/main-token-get-owner-set-repo-owner-mismatch.test.js:<line>:<column>
 `;
 
@@ -497,7 +536,7 @@ Error: Repository 'octocat/hello-world' includes owner 'octocat', which does not
     at run (file://<cwd>/main.js:<line>:<column>)
     at file://<cwd>/main.js:<line>:<column>
     at ModuleJob.run (node:internal/modules/esm/module_job:<line>:<column>)
-    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:<line>:<column>)
+    at async node:internal/modules/esm/loader:<line>:<column>
     at async file://<cwd>/tests/main-token-get-owner-unset-repo-owner-mismatch.test.js:<line>:<column>
 `;
 
